@@ -1,18 +1,28 @@
 import React, { useState } from "react";
 import { dbService } from "../fBase";
-import { doc, deleteDoc, updateDoc } from "firebase/firestore";
+import { doc, deleteDoc, updateDoc, getFirestore } from "firebase/firestore";
+import { deleteObject, ref } from "@firebase/storage";
+import { storageService } from "../fBase";
 
 const Nweet = ({ nweetObj, isOwner }) => {
   const [editing, setEditing] = useState(false);
   const [newNweet, setNewNweet] = useState(nweetObj.text);
 
-  const NweetTextRef = doc(dbService, "nweets", `${nweetObj.id}`);
+  const NweetTextRef = doc(getFirestore(), "nweets", `${nweetObj.id}`);
+  const urlRef = ref(storageService, nweetObj.attachmentUrl);
 
   const onDeleteClick = async () => {
     const ok = window.confirm("Are you sure you want to delte this nweet?");
     if (ok) {
       //delete nweet
-      await deleteDoc(NweetTextRef);
+      try {
+        await deleteDoc(NweetTextRef);
+        if (nweetObj.attachmentUrl !== "") {
+          await deleteObject(urlRef);
+        }
+      } catch (e) {
+        window.alert("Failed");
+      }
     }
   };
 
@@ -49,6 +59,9 @@ const Nweet = ({ nweetObj, isOwner }) => {
       ) : (
         <>
           <h4>{nweetObj.text}</h4>
+          {nweetObj.attachmentUrl && (
+            <img src={nweetObj.attachmentUrl} width="50px" height="50px" />
+          )}
           {isOwner && (
             <>
               <button onClick={onDeleteClick}>Delete Nweet</button>
