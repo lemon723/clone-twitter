@@ -1,9 +1,11 @@
-import { authService } from "fBase";
+import { authService } from "../fBase";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import React, { useState } from "react";
+
+const inputStyles = {};
 
 const AuthForm = () => {
   const [email, setEmail] = useState("");
@@ -38,7 +40,23 @@ const AuthForm = () => {
       }
       console.log(data);
     } catch (error) {
-      setError(error.message);
+      let errorMsg;
+      switch (error.code) {
+        case "auth/email-already-in-use":
+          errorMsg =
+            "There already exists an account with the given email address.";
+          break;
+        case "auth/invalid-email":
+          errorMsg = "The email address is not valid.";
+          break;
+        case "auth/operation-not-allowed":
+          errorMsg = "Email/Password accounts are not enabled.";
+          break;
+        case "auth/weak-password":
+          errorMsg = "Password should be at least 6 characters.";
+          break;
+      }
+      setError(errorMsg);
     }
   };
 
@@ -46,7 +64,7 @@ const AuthForm = () => {
 
   return (
     <>
-      <form onSubmit={handleonSubmit}>
+      <form onSubmit={handleonSubmit} className="container">
         <input
           name="email"
           type="text"
@@ -54,6 +72,7 @@ const AuthForm = () => {
           required
           value={email}
           onChange={handleonChange}
+          className="authInput"
         />
         <input
           name="password"
@@ -62,12 +81,17 @@ const AuthForm = () => {
           required
           value={password}
           onChange={handleonChange}
+          className="authInput"
         />
-        <input type="submit" value={newAccount ? "Create Account" : "Log In"} />
-        {error}
+        <input
+          type="submit"
+          className="authInput authSubmit"
+          value={newAccount ? "Create Account" : "Sign In"}
+        />
+        {error && <span className="authError">{error}</span>}
       </form>
-      <span onClick={toggleAccount}>
-        {newAccount ? "Log in" : "Create Account"}
+      <span onClick={toggleAccount} className="authSwitch">
+        {newAccount ? "Sign in" : "Create Account"}
       </span>
     </>
   );
